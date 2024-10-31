@@ -229,10 +229,10 @@ class _DraggableItemState<T extends Object> extends State<DraggableItem<T>>
           opacity: 0.7,
           child: widget.builder(widget.item),
         ),
-        childWhenDragging:widget.addGap != true
-            ? SizedBox.shrink()
+        childWhenDragging: widget.addGap != true
+            ? const SizedBox.shrink()
             : SizedBox.fromSize(
-                size: Size(80, 44),
+                size: const Size(80, 44),
               ),
         child: DragTarget<T>(
           onAcceptWithDetails: (data) => widget.onAccept(data.data),
