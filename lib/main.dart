@@ -137,7 +137,7 @@ class _DraggableItemState<T extends Object> extends State<DraggableItem<T>>
   late Animation<double> horizontalAxis;
   late AnimationController animationController;
   @override
-  void initState() { 
+  void initState() {
     super.initState();
 
     animationController =
@@ -145,11 +145,10 @@ class _DraggableItemState<T extends Object> extends State<DraggableItem<T>>
     verticalAxis = Tween<double>(begin: 0, end: 0).animate(animationController);
     horizontalAxis =
         Tween<double>(begin: 0, end: 0).animate(animationController);
- 
   }
 
   @override
-  void dispose() { 
+  void dispose() {
     super.dispose();
     animationController.dispose();
   }
@@ -178,17 +177,16 @@ class _DraggableItemState<T extends Object> extends State<DraggableItem<T>>
             ..addListener(() {
               setState(() {});
             });
+          print(o.dx);
           horizontalAxis = Tween<double>(
-                  begin: o.dx > 150
-                      ? o.dx / 2
-                      : o.dx > 100
-                          ? -o.dx / 2
+                  begin: o.dx > 100
+                          ? o.dx / 4
                           : o.dx > 50
                               ? -o.dx / 2
-                              : o.dx < 50
-                                  ? -o.dx * 5
-                                  : o.dx < 1
-                                      ? o.dx * 10
+                              : o.dx < 1
+                                  ? o.dx
+                                  : o.dx < 50
+                                      ? -o.dx * 5
                                       : 0,
                   end: 0)
               .animate(animationController)
