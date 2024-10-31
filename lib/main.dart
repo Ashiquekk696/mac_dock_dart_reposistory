@@ -176,8 +176,7 @@ class _DraggableItemState<T extends Object> extends State<DraggableItem<T>>
               .animate(animationController)
             ..addListener(() {
               setState(() {});
-            });
-          print(o.dx);
+            }); 
           horizontalAxis = Tween<double>(
                   begin: o.dx > 100
                           ? o.dx / 4
