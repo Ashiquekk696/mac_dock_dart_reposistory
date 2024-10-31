@@ -14,11 +14,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  double initial_x = 5;
-  double initial_y = 5;
-  late double x = initial_x;
-  late double y = initial_y;
-  late int index = 0;
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -71,10 +66,14 @@ class Dock<T extends Object> extends StatefulWidget {
 class _DockState<T extends Object> extends State<Dock<T>> {
   late final List<T> _items = List.from(widget.items);
   int? _draggedIndex;
-
+  GlobalKey key = GlobalKey();
+  bool addGap = false;
+  double containerVerticalAxis = 0.0;
+  double draggingVerticalAxis = 0.0;
   @override
   Widget build(BuildContext context) {
     return Container(
+      key: key,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         color: Colors.black12,
@@ -85,9 +84,34 @@ class _DockState<T extends Object> extends State<Dock<T>> {
         children: List.generate(_items.length, (index) {
           return DraggableItem<T>(
             item: _items[index],
+            addGap: addGap,
             isBeingDragged: index == _draggedIndex,
-            onDragStarted: () => setState(() => _draggedIndex = index),
-            onDragEnd: () => setState(() => _draggedIndex = null),
+            onDragUpdated: (v) {
+              draggingVerticalAxis = v.globalPosition.dy;
+              if (draggingVerticalAxis < containerVerticalAxis + 50 &&
+                  draggingVerticalAxis > containerVerticalAxis - 20) {
+                setState(() {
+                  addGap = true;
+                });
+              } else {
+                setState(() {
+                  addGap = false;
+                });
+              }
+            },
+            onDragStarted: () {
+              setState(() {
+                final RenderBox renderBox =
+                    key.currentContext!.findRenderObject() as RenderBox;
+                final position = renderBox.localToGlobal(Offset.zero);
+                containerVerticalAxis = position.dy;
+              });
+            },
+            onDragEnd: () => setState(() {
+              setState(() {
+                addGap = false;
+              });
+            }),
             onAccept: (data) {
               setState(() {
                 final oldIndex = _items.indexOf(data);
@@ -113,13 +137,16 @@ class DraggableItem<T extends Object> extends StatefulWidget {
     required this.onDragStarted,
     required this.onDragEnd,
     required this.onAccept,
+    required this.onDragUpdated,
+    required this.addGap,
     required this.builder,
   });
-
+  final bool addGap;
   final T item;
   final bool isBeingDragged;
   final VoidCallback onDragStarted;
 
+  final Function(DragUpdateDetails) onDragUpdated;
   final VoidCallback onDragEnd;
   final Function(T) onAccept;
   final Widget Function(T) builder;
@@ -140,8 +167,8 @@ class _DraggableItemState<T extends Object> extends State<DraggableItem<T>>
   void initState() {
     super.initState();
 
-    animationController =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    animationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
     verticalAxis = Tween<double>(begin: 0, end: 0).animate(animationController);
     horizontalAxis =
         Tween<double>(begin: 0, end: 0).animate(animationController);
@@ -159,6 +186,9 @@ class _DraggableItemState<T extends Object> extends State<DraggableItem<T>>
       offset: Offset(horizontalAxis.value, verticalAxis.value),
       child: Draggable<T>(
         data: widget.item,
+        onDragUpdate: (v) {
+          widget.onDragUpdated(v);
+        },
         onDraggableCanceled: (v, o) async {
           animationController.reset();
           animationController.forward();
@@ -176,29 +206,34 @@ class _DraggableItemState<T extends Object> extends State<DraggableItem<T>>
               .animate(animationController)
             ..addListener(() {
               setState(() {});
-            }); 
+            });
           horizontalAxis = Tween<double>(
                   begin: o.dx > 100
-                          ? o.dx / 4
-                          : o.dx > 50
-                              ? -o.dx / 2
-                              : o.dx < 1
-                                  ? o.dx
-                                  : o.dx < 50
-                                      ? -o.dx * 5
-                                      : 0,
+                      ? o.dx / 4
+                      : o.dx > 50
+                          ? -o.dx / 2
+                          : o.dx < 1
+                              ? o.dx
+                              : o.dx < 50
+                                  ? -o.dx * 5
+                                  : 0,
                   end: 0)
               .animate(animationController)
             ..addListener(() {
               setState(() {});
             });
         },
+        onDragStarted: widget.onDragStarted,
         onDragEnd: handleDragEnd,
         feedback: Opacity(
           opacity: 0.7,
           child: widget.builder(widget.item),
         ),
-        childWhenDragging: const SizedBox.shrink(),
+        childWhenDragging:widget.addGap != true
+            ? SizedBox.shrink()
+            : SizedBox.fromSize(
+                size: Size(80, 44),
+              ),
         child: DragTarget<T>(
           onAcceptWithDetails: (data) => widget.onAccept(data.data),
           builder: (context, candidateData, rejectedData) {
