@@ -54,7 +54,7 @@ class _MyAppState extends State<MyApp> {
 
 /// Dock of the reorderable [items].
 class Dock<T extends Object> extends StatefulWidget {
-  Dock({
+  const Dock({
     super.key,
     this.items = const [],
     required this.builder,
@@ -106,7 +106,7 @@ class _DockState<T extends Object> extends State<Dock<T>> {
 
 /// Draggable item widget that encapsulates the [DraggableItems].
 class DraggableItem<T extends Object> extends StatefulWidget {
-  DraggableItem({
+  const DraggableItem({
     super.key,
     required this.item,
     required this.isBeingDragged,
@@ -141,7 +141,7 @@ class _DraggableItemState<T extends Object> extends State<DraggableItem<T>>
     super.initState();
 
     animationController =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+        AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     verticalAxis = Tween<double>(begin: 0, end: 0).animate(animationController);
     horizontalAxis =
         Tween<double>(begin: 0, end: 0).animate(animationController);
